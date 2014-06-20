@@ -1,0 +1,5 @@
+ip: "192.168.33.20"
+port: "5432"
+database: "mbti"
+user: "cncflora"
+password: "cncflora"

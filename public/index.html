@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de dados espaciais</title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+    <style type="text/css">
+        * { padding:0 ; margin:0}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        $("#map").height($(window).height()).width($(window).width());
+
+        var layers = ["eoo","aoo","subpopulacoes","pontos","remanescentes"]
+
+
+
+
+
+
+        var map = L.map('map',{crs:L.CRS.EPSG3857}).setView([-15.79889,-47.866667],5);
+        var land = L.tileLayer('http://{s}.tile3.opencyclemap.org/landscape/{z}/{x}/{y}.png').addTo(map);
+        var baseLayers = { Landscape: land };
+
+        var dataLayers = {}
+
+        for(var i=0; i<layers.length; i++) {
+            dataLayers[layers[i]] = L.geoJson().addTo(map);
+        }
+
+        L.control.layers(baseLayers,dataLayers).addTo(map);
+
+	var c=0;
+        for(var i=0; i<layers.length; i++) {
+            var l = layers[i];
+            $.getJSON('/'+l+location.search,function(data){
+                for(var o=0;o<data.length;o++) {
+                    dataLayers[layers[c]].addData(data[o]);
+                }
+		c++;
+            });
+        }
+
+    });
+    </script>
+</body>
+</html>

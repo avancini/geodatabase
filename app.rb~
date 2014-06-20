@@ -1,0 +1,60 @@
+
+require 'rubygems'
+require 'sinatra'
+require 'sinatra/reloader' 
+require 'json'
+require 'pg'
+require 'yaml'
+require_relative 'functions'
+
+## Conexão
+yml= YAML.load_file("config.yml")
+conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
+
+get '/' do
+    redirect '/index.html'
+end
+
+get '/pontos' do
+
+
+
+
+
+pontos = []
+ocorrencias = []
+ 
+   conn.exec("select st_x(geom) as long, st_y(geom) as lat from geo.ocorrencias where id = 4089;") do |result|
+      result.each do |row|
+         ocorrencias.push({"long" => row['long'], "lat" => row['lat']})  
+      end
+   end
+
+y = ocorrencias.count - 1
+
+#puts ocorrencias
+   for x in (0..y) 
+      pontos[x]={
+         :type=>"Feature",
+         :geometry=> {
+             :type=>"MultiPoint",
+             :coordinates=>[ocorrencias[x]["long"],ocorrencias[x]["lat"]]
+          }
+      }
+   end
+
+#pontos = [{:type=>"Feature", :geometry=> {:type=>"MultiPoint",:coordinates=>[[-25.0,-10.0],[-22.0,-17.0],[-29.0,-15.0]]}}]
+
+
+
+
+
+     
+    content_type :json
+    pontos.to_json
+
+
+
+end
+
+
