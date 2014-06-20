@@ -19,6 +19,8 @@ get '/' do
    redirect '/index.html'
 end
 
+
+
 ## Busca PONTOS de uma especie
 get '/pontos' do
 
@@ -31,56 +33,13 @@ get '/pontos' do
       end
    end
 
-#   puts "PONTOS GeoJSON ====>  #{pontos}"
+   #puts "PONTOS GeoJSON ====>  #{pontos}"
    content_type :json
    pontos.to_json
 end
 
 
 
-=begin
-## Buscar EOO de uma espécie
-get '/eoo' do
-
-   num=params[:numero]
-   eoo_temp = [] 
-   eoo = []
- 
-   conn2.exec("select st_astext(geom) as poligono from geo.eoo where id = #{num};") do |result2|
-      result2.each do |row2|
-         txt2= row2['poligono'].gsub("POLYGON((","").gsub("))","")
-         #puts "txt = #{txt}"
-         vertices=txt2.split(",")
-	 #puts "vertices = #{vertices}"
-         poli=[]
-	 for i in (0..vertices.count-1)
-   	    vertice = vertices[i].split(" ")
-            #puts "vertice =#{vertice}"
-            vertice[0] = vertice[0].to_f
-            vertice[1] = vertice[1].to_f
-            #puts "vertice =#{vertice}"
-            poli.push(vertice)
-	 end
-         eoo_temp.push(poli)
-      end
-   end
- 
-   # loop que cria a estrutura do geojson com o poligono de eoo
-   for x in (0..eoo_temp.count-1) 
-      eoo[x]={
-         :type=>"Feature",
-         :geometry=> {
-             :type=>"Polygon",
-             :coordinates=>[eoo_temp[x]]
-          }
-      }
-   end
-
-   #puts "EOO ====>  #{eoo}"
-   content_type :json
-   eoo.to_json
-end
-=end
 ## Busca EOO de uma especie
 get '/eoo' do
 
@@ -93,10 +52,11 @@ get '/eoo' do
       end
    end
 
-   puts "EOO GeoJSON ====>  #{eoo}"
+   #puts "EOO GeoJSON ====>  #{eoo}"
    content_type :json
    eoo.to_json
 end
+
 
 
 ## Busca SUBPOPULACOES de uma especie
@@ -111,10 +71,11 @@ get '/subpopulacoes' do
       end
    end
 
-#   puts "SUBPOPULACOES GeoJSON ====>  #{subpopulacoes}"
+   #puts "SUBPOPULACOES GeoJSON ====>  #{subpopulacoes}"
    content_type :json
    subpopulacoes.to_json
 end
+
 
 
 ## Busca AOO de uma especie
@@ -129,10 +90,11 @@ get '/aoo' do
       end
    end
 
-#   puts "AOO GeoJSON ====>  #{aoo}"
+   #puts "AOO GeoJSON ====>  #{aoo}"
    content_type :json
    aoo.to_json
 end
+
 
 
 ## Busca REMANESCENTES de uma especie
@@ -147,7 +109,7 @@ get '/remanescentes' do
       end
    end
 
-#   puts "REMANESCENTES GeoJSON ====>  #{remanescentes}"
+   #puts "REMANESCENTES GeoJSON ====>  #{remanescentes}"
    content_type :json
    remanescentes.to_json
 end
