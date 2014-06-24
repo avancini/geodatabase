@@ -127,9 +127,12 @@ end
 
 
 
+## Inserir dados de REMANESCENTES de uma especie na tabela REMANESCENTES_ESPECIE
+def insertRemanescentes(conn,id)
 
-
-
+   conn.exec("insert into geo.remanescentes_especie(id,geom) values (#{id}, (select st_union(geom) from geo.remanescentes where st_intersects(geom, (select st_union(geom) from geo.subpopulacoes where id = #{id})) and legenda = 'Mata'));")
+ 
+end
 
 
 
