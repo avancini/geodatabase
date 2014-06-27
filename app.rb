@@ -103,8 +103,9 @@ get '/remanescentes' do
    num=params[:numero]
    remanescentes = []
 
-   conn5.exec("select ST_AsGeoJSON(geom) as poligono from geo.remanescentes where st_intersects(geom, (select st_union(geom) from geo.subpopulacoes where id = #{num})) and legenda = 'Mata';") do |result5|
-      result5.each do |row5|
+#   conn5.exec("select ST_AsGeoJSON(geom) as poligono from geo.remanescentes where st_intersects(geom, (select st_union(geom) from geo.subpopulacoes where id = #{num})) and legenda = 'Mata';") do |result5|
+conn5.exec("select ST_AsGeoJSON(geom) as poligono from geo.remanescentes where geo.remanescentes.gid in (select distinct(gid) from geo.remanescente_especie where id =  #{num});") do |result5| 
+     result5.each do |row5|
       remanescentes.push(JSON.parse(row5['poligono']))
       end
    end

@@ -127,11 +127,17 @@ end
 
 
 
-## Inserir dados de REMANESCENTES de uma especie na tabela REMANESCENTES_ESPECIE
+## Inserir dados de REMANESCENTES de uma especie na tabela REMANESCENTE_ESPECIE
 def insertRemanescentes(conn,id)
-
-   conn.exec("insert into geo.remanescentes_especie(id,geom) values (#{id}, (select st_union(geom) from geo.remanescentes where st_intersects(geom, (select st_union(geom) from geo.subpopulacoes where id = #{id})) and legenda = 'Mata'));")
- 
+gid = []
+   conn.exec("select distinct(gid) from geo.remanescentes where st_intersects(geom,(select st_union(geom) from geo.subpopulacoes where id = #{id})) and legenda = 'Mata';") do |result|
+      result.each do |row|   
+         gid.push(row['gid'])
+      end
+   end
+   for x in (0..gid.count-1)
+         conn.exec("insert into geo.remanescente_especie values (#{gid[x]}, #{id})")
+   end
 end
 
 
