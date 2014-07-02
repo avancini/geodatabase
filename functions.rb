@@ -181,3 +181,30 @@ def createAOO(conn, id)
 end
 
 
+
+
+## Cria e insere dados de RODOVIAS de uma especie na tabela SUBPOPULACAO_RODOVIA
+def createSubpopulacaoRodovia(conn)
+subpop = []
+   conn.exec("select gid from geo.subpopulacoes;") do |result|
+      result.each do |row|
+         subpop.push(row['gid'])
+      end
+   end
+   for x in (0..subpop.count-1) 
+      puts "subpopulacao #{x+1} de #{subpop.count}"
+      rod = []
+      conn.exec("select gid from geo.rodovias where st_intersects(geom_buffer, (select geom from geo.subpopulacoes where gid = #{subpop[x]}))") do |result|
+         result.each do |row|
+            rod.push(row['gid'])
+         end
+      end
+      for y in (0..rod.count-1)
+         puts "   - rodovia #{y+1} de #{rod.count}"
+         conn.exec("insert into geo.subpopulacao_rodovia(gid_subpop, gid_rod) values (#{subpop[x]}, #{rod[y]})") 
+      end 
+   end
+end
+
+
+

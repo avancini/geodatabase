@@ -11,11 +11,16 @@ require_relative 'functions'
 yml= YAML.load_file("config.yml")
 conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
 
+
+## Funcao para corrigir os remanescentes
 #remanescentes = corrigeRemanescentes(conn)
 
+## Insere os gis de subpopulacoes e rodovias associadas
+createSubpopulacaoRodovia(conn)
 
 
 
+=begin
 ## Listar as espécies (apeas o id)
 especies = getSpeciesId(conn)
 
@@ -46,9 +51,10 @@ for x in (0..y)
 
    ## Corrigir dados de remanescentes
 #   corrigeRemanescentes(conn)
-   ## Inserir remanescentes na tabela remanescentes_especie
-insertRemanescentes(conn,especies[x])
-
+   ## Inserir remanescentes na tabela remanescente_especie
+#   insertRemanescentes(conn,especies[x])
 end
+
+=end
 
 

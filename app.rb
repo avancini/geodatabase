@@ -14,6 +14,7 @@ conn2 = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], ym
 conn3 = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
 conn4 = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
 conn5 = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
+conn6 = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
 
 get '/' do
    redirect '/index.html'
@@ -114,5 +115,24 @@ conn5.exec("select ST_AsGeoJSON(geom) as poligono from geo.remanescentes where g
    content_type :json
    remanescentes.to_json
 end
+
+
+
+## Busca RODOVIAS de uma especie
+get '/rodovias' do
+
+   num=params[:numero]
+   rodovias = []
+
+conn6.exec("select ST_AsGeoJSON(geom) as linha from geo.rodovias where st_intersects(geom,(select st_union(geom) from geo.subpopulacoes where id = #{num}));") do |result6|
+     result6.each do |row6|
+      rodovias.push(JSON.parse(row6['linha']))
+      end
+   end
+
+   content_type :json
+   rodovias.to_json
+end
+
 
 
