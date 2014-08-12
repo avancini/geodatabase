@@ -1,8 +1,205 @@
-#teste com a espécie id = 4089
-yml= YAML.load_file("config.yml")
-conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml["user"], yml["password"])
+## ALL FUNCTIONS SCRIPT
+#conn.exec("")
 
-## Listar as espécies do sistema
+
+
+## CREATE TAXON TABLES (SPECIES AND OCCURRENCES)
+def createTaxonTables(conn)
+
+	## Table: geo.especies
+	conn.exec("DROP TABLE geo.especies;")
+	conn.exec("CREATE TABLE geo.especies
+			(id integer NOT NULL,
+			  familia character varying(50) DEFAULT NULL::character varying,
+			  genero character varying(50) DEFAULT NULL::character varying,
+			  especie character varying(50) DEFAULT NULL::character varying,
+			  tipo character varying(50) DEFAULT NULL::character varying,
+			  infranome character varying(50) DEFAULT NULL::character varying,
+			  autor character varying(100) DEFAULT NULL::character varying,
+			  id_fb character varying(255),
+			  lifeform_fb character varying(255),
+			  CONSTRAINT especies_pkey PRIMARY KEY (id));")
+	conn.exec("ALTER TABLE geo.especies OWNER TO cncflora;")
+
+
+	## Table: geo.ocorrencias
+	conn.exec("DROP TABLE geo.ocorrencias;")
+	conn.exec("CREATE TABLE geo.ocorrencias
+			(codigocncflora integer NOT NULL,
+			  id integer,
+			  codigocolecao character varying(25) DEFAULT NULL::character varying,
+			  familia character varying(50) DEFAULT NULL::character varying,
+			  genero character varying(50) DEFAULT NULL::character varying,
+			  especie character varying(50) DEFAULT NULL::character varying,
+			  tipo character varying(10) DEFAULT NULL::character varying,
+			  infranome character varying(50) DEFAULT NULL::character varying,
+			  numerocatalogo character varying(15) DEFAULT NULL::character varying,
+			  numerocoletor character varying(15) DEFAULT NULL::character varying,
+			  coletor character varying(255) DEFAULT NULL::character varying,
+			  anocoleta character varying(10) DEFAULT NULL::character varying,
+			  mescoleta character varying(10) DEFAULT NULL::character varying,
+			  diacoleta character varying(10) DEFAULT NULL::character varying,
+			  determinador character varying(255) DEFAULT NULL::character varying,
+			  estado character varying(255) DEFAULT NULL::character varying,
+			  municipio character varying(255) DEFAULT NULL::character varying,
+			  localidade text,
+			  longitude double precision DEFAULT 0::double precision,
+			  latitude double precision DEFAULT 0::double precision,
+			  longcncflora double precision DEFAULT 0::double precision,
+			  latcncflora double precision DEFAULT 0::double precision,
+			  preccncflora character varying(50) DEFAULT NULL::character varying,
+			  metodocncflora character varying(50) DEFAULT NULL::character varying,
+			  obscncflora text,
+			  revisado smallint DEFAULT 0::smallint,
+			  valido smallint DEFAULT 0::smallint,
+			  longitudegis double precision DEFAULT 0::double precision,
+			  latitudegis double precision DEFAULT 0::double precision,
+			  geom geometry(Point,4326),
+			  CONSTRAINT ocorrencias_pkey PRIMARY KEY (codigocncflora),
+			  CONSTRAINT ocorrencias_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+	conn.exec("ALTER TABLE geo.ocorrencias OWNER TO cncflora;")
+end
+
+
+## CREATE ANALISYS TABLES
+def createAnalisysTables(conn)
+	
+	## Table: geo.aoo
+	conn.exec("DROP TABLE geo.aoo;")
+	conn.exec("CREATE TABLE geo.aoo
+			(gid serial NOT NULL,
+			  id integer,
+			  geom geometry(Polygon,4326),
+			  CONSTRAINT aoo_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+	conn.exec("ALTER TABLE geo.aoo OWNER TO cncflora;")
+
+
+
+	## Table: geo.eoo
+	conn.exec("DROP TABLE geo.eoo;")
+	conn.exec("CREATE TABLE geo.eoo(
+			  gid serial NOT NULL,
+			  id integer NOT NULL,
+			  geom geometry(Polygon,4326),
+			  CONSTRAINT eoo_pkey PRIMARY KEY (id),
+			  CONSTRAINT eoo_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+	conn.exec("ALTER TABLE geo.eoo OWNER TO cncflora;")
+
+
+
+	## Table: geo.subpopulacoes
+	conn.exec("DROP TABLE geo.subpopulacoes;")
+	conn.exec("CREATE TABLE geo.subpopulacoes(
+			  gid serial NOT NULL,
+			  id integer,
+			  geom geometry(Polygon,4326),
+			  area_total double precision,			  
+			  area_remanescente double precision,
+			  area_rodovia double precision,
+			  remanescentes_sob_rodovia double precision,
+			  area_minerada double precision,			  
+			  area_uc double precision,
+			  area_remanescente_uc double precision,
+			  area_terra_indigena double precision,
+			  area_remanescente_terra_indigena double precision,
+			  porcentagem_remanescente double precision,
+			  porcentagem_rodovia double precision,
+			  porcentagem_minerada double precision,
+			  porcentagem_remanescente_rodovia double precision,
+			  porcentagem_remanescente_uc double precision,
+			  porcentagem_remanescente_terra_indigena double precision,
+			  CONSTRAINT subpopulacoes_pkey PRIMARY KEY (gid),
+			  CONSTRAINT subpopulacoes_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+	conn.exec("ALTER TABLE geo.subpopulacoes OWNER TO cncflora;")
+
+
+
+	## Table: geo.subpopulacao_remanescente (relacionamento entre subpopulação, remanescentes e espécies. Antiga tabela remanescente_especie)
+	conn.exec("DROP TABLE geo.subpopulacao_remanescente;")
+	conn.exec("CREATE TABLE geo.subpopulacao_remanescente(
+			  gid integer,
+			  gid_subpop integer,
+			  gid_remanescente
+			  id integer,
+			  CONSTRAINT subpopulacao_remanescente_gid_pkey PRIMARY KEY (gid),
+			  CONSTRAINT subpopulacao_remanescente_gid_remanescente_fkey FOREIGN KEY (gid_remanescente) REFERENCES geo.remanescentes (gid),
+			  CONSTRAINT subpopulacao_remanescente_subpop_gid_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid),
+			  CONSTRAINT subpopulacao_remanescente_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+	conn.exec("ALTER TABLE geo.subpopulacao_remanescente OWNER TO cncflora;")
+
+
+
+	## Table: geo.subpopulacao_rodovia
+	conn.exec("DROP TABLE geo.subpopulacao_rodovia;")
+	conn.exec("CREATE TABLE geo.subpopulacao_rodovia(
+			  gid serial NOT NULL,
+			  gid_subpop integer,
+			  gid_rod integer,
+			  CONSTRAINT subpopulacao_rodovia_gid_pkey PRIMARY KEY (gid),
+			  CONSTRAINT subpopulacao_rodovia_gid_rod_fkey FOREIGN KEY (gid_rod) REFERENCES geo.rodovias (gid),
+			  CONSTRAINT subpopulacao_rodovia_gid_subpop_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid));")
+	conn.exec("ALTER TABLE geo.subpopulacao_rodovia OWNER TO cncflora;")
+
+
+
+	## Table: geo.subpopulacao_mineracao
+	conn.exec("DROP TABLE geo.subpopulacao_mineracao;")
+	conn.exec("CREATE TABLE geo.subpopulacao_mineracao(
+			  gid serial NOT NULL,
+			  gid_subpop integer,
+			  gid_mineracao integer,
+			  CONSTRAINT subpopulacao_mineracao_pkey PRIMARY KEY (gid),
+			  CONSTRAINT subpopulacao_mineracao_gid_mineracao_fkey FOREIGN KEY (gid_mineracao) REFERENCES geo.mineracao (gid),
+			  CONSTRAINT subpopulacao_mineracao_gid_subpop_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid));")
+	conn.exec("ALTER TABLE geo.subpopulacao_mineracao OWNER TO cncflora;")
+
+
+
+	## Table: geo.subpopulacao_uc
+	conn.exec("DROP TABLE geo.subpopulacao_uc;")
+	conn.exec("CREATE TABLE geo.subpopulacao_uc(
+			  gid serial NOT NULL,
+			  gid_subpop integer,
+			  gid_uc integer,
+			  CONSTRAINT subpopulacao_uc_gid_pkey PRIMARY KEY (gid),
+			  CONSTRAINT subpopulacao_uc_gid_subpop_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid),
+			  CONSTRAINT subpopulacao_uc_gid_uc_fkey FOREIGN KEY (gid_uc) REFERENCES geo.ucs (gid));")
+	conn.exec("ALTER TABLE geo.subpopulacao_uc OWNER TO cncflora;")
+
+
+
+        ## Table: geo.subpopulacao_terra_indigena
+        conn.exec("DROP TABLE geo.subpopulacao_terra_indigena;")
+        conn.exec("CREATE TABLE geo.subpopulacao_terra_indigena(
+                          gid serial NOT NULL,
+                          gid_subpop integer,
+                          gid_terra_indigena integer,
+                          CONSTRAINT subpopulacao_terra_indigena_gid_pkey PRIMARY KEY (gid),
+                          CONSTRAINT subpopulacao_terra_indigena_gid_subpop_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid),
+                          CONSTRAINT subpopulacao_terra_indigena_gid_uc_fkey FOREIGN KEY (gid_terra_indigena) REFERENCES geo.ucs (gid));")
+        conn.exec("ALTER TABLE geo.subpopulacao_terra_indigena OWNER TO cncflora;")
+
+
+
+
+
+
+
+
+
+
+
+
+
+end
+
+
+
+
+
+
+
+
 def getSpeciesId(conn)
    especies = []
    conn.exec("select id from geo.especies order by id;") do |result|
