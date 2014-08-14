@@ -1,4 +1,11 @@
 ## ALL FUNCTIONS SCRIPT
+#encoding: utf-8
+require 'rubygems'
+require 'pg'
+require 'yaml'
+require_relative 'functions'
+
+
 #conn.exec("")
 
 
@@ -179,27 +186,10 @@ def createAnalisysTables(conn)
                           CONSTRAINT subpopulacao_terra_indigena_gid_uc_fkey FOREIGN KEY (gid_terra_indigena) REFERENCES geo.ucs (gid));")
         conn.exec("ALTER TABLE geo.subpopulacao_terra_indigena OWNER TO cncflora;")
 
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 
-
-
-
-
-
-
+## Lista de espécies
 def getSpeciesId(conn)
    especies = []
    conn.exec("select id from geo.especies order by id;") do |result|
@@ -211,10 +201,11 @@ return especies
 end
 
 
-## Lista as subpopulacoes
-def getSubpopGid(conn)
+
+## Lista de subpopulacoes (por espécie - id)
+def getSubpopGid(conn, id)
 subpop = []
-   conn.exec("select gid from geo.subpopulacoes where area_minerada = 0 order by gid;") do |result|
+   conn.exec("select gid from geo.subpopulacoes where id = #{id} by gid;") do |result|
       result.each do |row|
          subpop.push(row['gid'])
       end
@@ -224,87 +215,17 @@ end
 
 
 
-
-
-
-
-
-
-
-## Remover espécies fora do recorte Corredor da Mata Atlântic = BA, MG, ES, RJ, SP e PR
-def removeEspecies(conn,especies)
-=begin
-y = especies.count - 1
-
-endemicas = 0
-nao_endemicas = 0
-remover = []
-   for x in (0..y)
-
-      conn.exec("select st_intersects(st_setsrid(st_union(geom), 4326), (select st_setsrid(st_union(geom), 4326) from geo.estados where gid not in (2, 5, 3, 10, 15, 9))) from geo.ocorrencias where id = #{especies[x]};") do |result|
-         result.each do |row|
-         puts"Id = #{especies[x]} -> #{row['st_intersects']}"
-         if (row['st_intersects'] == 'f') then
-            endemicas = endemicas + 1
-         else 
-            nao_endemicas = nao_endemicas + 1
-            remover.push(especies[x])
-         end
-         end
-      end
-   end
-puts "endemicas = #{endemicas}"
-puts "nao endemicas = #{nao_endemicas}"
-   for x in (0..remover.count - 1)
-      conn.exec("delete from geo.ocorrencias where id = #{remover[x]};")
-  end
-=end
-puts "Delete AOO"
-     conn.exec("delete from geo.aoo where aoo.id not in (select distinct(id) from geo.ocorrencias);")
-puts "Delete AOO - OK"
-puts " -- "
-puts "Delete EOO"
-     conn.exec("delete from geo.eoo where eoo.id not in (select distinct(id) from geo.ocorrencias);")
-puts "Delete EOO - OK"
-puts " -- "
-puts "Delete Rodovia_subpopulacao"
-     conn.exec("delete from geo.subpopulacao_rodovia where gid_subpop in (select gid from geo.subpopulacoes where subpopulacoes.id not in (select distinct(id) from geo.ocorrencias));")
-puts "Delete Rodovia_subpopulacao - OK"
-puts " -- "
-puts "Delete Subpopulacoes"
-     conn.exec("delete from geo.subpopulacoes where subpopulacoes.id not in (select distinct(id) from geo.ocorrencias);")
-puts "Delete Subpopulacoes - OK"
-puts " -- "
-puts "Delete remanescente_especie"
-     conn.exec("delete from geo.remanescente_especie where remanescente_especie.id not in (select distinct(id) from geo.ocorrencias);")
-puts "Delete remanescente-especie - OK"
-puts " -- "
-puts "Delete especies"
-     conn.exec("delete from geo.especies where especies.id not in (select distinct(id) from geo.ocorrencias);")
-puts "Delete especies - OK"
-puts " -- "
-
-puts "delete ok"
-end
-
-
-## Busca os registros pelo ID de uma espécie
+## Lista de registros (por espécie - id)
 def getOccurrenceRegisterById(conn,id)
    ocorrencias = []
-   ocorrencias_temp = []
-   # Gera uma lista de ocorrencias sem repetir ocorrencias com mesma coordenadas
-   conn.exec("select codigocncflora, (st_x(geom) || ' ' || st_y(geom)) as coordenadas from geo.ocorrencias where id =#{id};") do |result|
+   conn.exec("select codigocncflora from geo.ocorrencias where id =#{id};") do |result|
       result.each do |row|
-         coordenadas = {"codigocncflora" => row['codigocncflora'], "coordenadas" => row['coordenadas']}
-         ocorrencias_temp.push(coordenadas)  
-      end
-      ocorrencias_temp = ocorrencias_temp.uniq {|e| e["coordenadas"]} # Elimina coordenadas duplicadas.
-      ocorrencias_temp.each do |row| 
-         ocorrencias.push(row["codigocncflora"].to_i)
+         ocorrencias.push(row['codigocncflora'])  
       end
    end
 return ocorrencias
 end
+
 
 
 ## Calcula a maior distância entre os pontos
