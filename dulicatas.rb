@@ -53,7 +53,7 @@ def deletaArquivos1(conn)
         end
 end
 
-deletaArquivos1(conn)
+#deletaArquivos1(conn)
 
 ## deleta arquivos de rodovia
 def deletaArquivos2(conn)
@@ -68,7 +68,7 @@ def deletaArquivos2(conn)
         end
 end
 
-deletaArquivos2(conn)
+#deletaArquivos2(conn)
 
 ## deleta arquivos de mineração
 def deletaArquivos3(conn)
@@ -83,7 +83,7 @@ def deletaArquivos3(conn)
         end
 end
 
-deletaArquivos3(conn)
+#deletaArquivos3(conn)
 
 ## deleta arquivos de grid
 def deletaArquivos4(conn)
@@ -98,7 +98,7 @@ def deletaArquivos4(conn)
         end
 end
 
-deletaArquivos4(conn)
+#deletaArquivos4(conn)
 
 ## deleta arquivos de ucs
 def deletaArquivos5(conn)
@@ -113,7 +113,7 @@ def deletaArquivos5(conn)
         end
 end
 
-deletaArquivos5(conn)
+#deletaArquivos5(conn)
 
 ## deleta arquivos de terra_indigena
 def deletaArquivos6(conn)
@@ -128,7 +128,7 @@ def deletaArquivos6(conn)
         end
 end
 
-deletaArquivos6(conn)
+#deletaArquivos6(conn)
 
 ## deleta arquivos de municipios
 def deletaArquivos7(conn)
@@ -143,7 +143,7 @@ def deletaArquivos7(conn)
         end
 end
 
-deletaArquivos7(conn)
+#deletaArquivos7(conn)
 
 
 
