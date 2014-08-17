@@ -124,7 +124,7 @@ def createAnalisysTables(conn)
 	## Table: geo.subpopulacao_remanescente (relacionamento entre subpopulação, remanescentes e espécies. Antiga tabela remanescente_especie)
 	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_remanescente;")
 	conn.exec("CREATE TABLE geo.subpopulacao_remanescente(
-			  gid integer,
+			  gid serial,
 			  gid_subpop integer,
 			  gid_remanescente integer,
 			  id integer NOT NULL,
@@ -211,15 +211,15 @@ end
 
 
 
-## Criar poligono de EOO no postgis
-def createEOO(conn, id)
+## Criar poligono de EOO no postgis    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertEoo(conn, id)
 	conn.exec("insert into geo.eoo(id, geom) VALUES(#{id}, (select ST_ConvexHull(ST_Collect(ST_SetSrid(geom,4326))) from geo.ocorrencias where id =#{id}));")
 end
 
 
 
-## Criar poligono de AOO no postgis
-def createAOO(conn, id)
+## Criar poligono de AOO no postgis    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertAoo(conn, id)
 	poligono = ""
 	conn.exec("select st_astext(b.geom) from geo.grid b inner join geo.ocorrencias a on st_intersects(b.geom, a.geom) where a.id = #{id} group by a.id, b.geom;").each do |row|
         	poligono = (row['st_astext'])
@@ -227,31 +227,6 @@ def createAOO(conn, id)
 	end
 #       	conn.exec("insert into geo.aoo(id,geom) values (#{id}, (st_geomfromtext(\'#{poligono}\',4326)));")
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -295,171 +270,57 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Lista de subpopulacoes (por espécie - id)
-def getSubpopGid(conn, id)
-subpop = []
-   conn.exec("select gid from geo.subpopulacoes where id = #{id} by gid;") do |result|
-      result.each do |row|
-         subpop.push(row['gid'])
-      end
-   end
+## Lista de subpopulacoes (por espécie - id)    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def getSubpopById(conn,id)
+	subpop = []
+		conn.exec("select gid from geo.subpopulacoes where id = #{id} order by gid;").each do |row|
+			subpop.push(row['gid'])
+		end
 return subpop
 end
 
 
 
-## Lista de registros (por espécie - id)
-def getOccurrenceRegisterById(conn,id)
-   ocorrencias = []
-   conn.exec("select codigocncflora from geo.ocorrencias where id =#{id};") do |result|
-      result.each do |row|
-         ocorrencias.push(row['codigocncflora'])  
-      end
-   end
-return ocorrencias
+## Lista todas as subpopulacoes   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def getSubpopGid(conn)
+	subpop = []
+        conn.exec("select gid from geo.subpopulacoes order by gid;").each do |row|
+                subpop.push(row['gid'])
+        end
+return subpop
 end
 
 
 
-## Calcula a maior distância entre os pontos
-def getDistance(conn,ocorrencias)
-   distancia = 0
-   a = ocorrencias.count - 1
-   if (a >= 2) then
-      for x in (0..a)
-         b = (x + 1)
-         for y in (b..a)
-            conn.exec("select st_distance_Sphere(
-                                (select geom from geo.ocorrencias where codigocncflora = #{ocorrencias[x]}),
-                                (select geom from geo.ocorrencias where codigocncflora = #{ocorrencias[y]})) as meters;") do |result|
-               result.each do |row|
-                  temp = row['meters'].to_f
-                  if (temp > distancia) then
-                     distancia = temp
-                  end
-               end
-            end
-         end
-      end
-   else
-      distancia = 10000
-   end
-return distancia
-end
-
-
-## Criar poligono de subpopulacoes no postgis
-def insertSubpopulacoesOld(conn, id, raio)
-   conn.exec("select st_astext(ST_Buffer_Meters((select ST_Union(geom) from geo.ocorrencias where id = #{id}), #{raio}));") do |result|
-      result.each do |row|
-         temp = (row['st_astext'])
-          temp = temp.delete "MULTIPOLYGON"
-          temp = temp.delete "POLYGON"
-          poligonos_temp = temp.split("),(")
-       
-          subpopulacoes = []
-          y = poligonos_temp.count - 1
-          for x in (0..y)
-             subpopulacoes[x] = "POLYGON((#{poligonos_temp[x].delete "()"}))"
-             conn.exec("INSERT INTO geo.subpopulacoes(id, geom) VALUES (#{id}, (select st_geomFromText(' #{subpopulacoes[x]}',4326)));")
-             #puts "INSERT INTO geo.subpopulacoes(id, geom) VALUES (#{id}, (select st_geomFromText(' #{subpopulacoes[x]}'),4326));"
-          end
-      end
-   end
-end
-
-
-
-
-
-
-## Criar poligono de EOO no postgis
-def createEOOOLD(conn, id, ocorrencias)
-   if (ocorrencias.count < 3) then
-      conn.exec("insert into geo.eoo(id, geom) VALUES(#{id}, (select ST_Buffer_Meters((select ST_Union(geom) from geo.ocorrencias where id = #{id}), 10000)));")
-   else
-      conn.exec("insert into geo.eoo(id, geom) VALUES(#{id}, (select ST_ConvexHull(ST_Collect(ST_SetSrid(geom,4326))) from geo.ocorrencias where id =#{id}));")
-   end
-end
-
-
-## Funcao criada para corrigir as geometrias do shape de AOO que estavam armazenados como multipolygon
-def corrigeGrid(conn)
-   for y in (1..276722)
-      conn.exec("select st_astext(the_geom) from geo.grid where gid = #{y};") do |result|
-         result.each do |row|
-            poligono = (row['st_astext']).gsub("MULTIPOLYGON(((","POLYGON((").gsub(")))","))")
-            conn.exec("update geo.grid set geom = (st_geomfromtext(\'#{poligono}\',4326)) where gid = #{y};")
-         end
-      end
-   end
-end
-
-
-## Funcao criada para corrigir as geometrias do shape de Remanescentes que estavam armazenados como multipolygon
-def corrigeRemanescentes(conn)
-   for y in (1..278630)
-      conn.exec("select st_astext(the_geom) from geo.remanescentes where gid = #{y};") do |result|
-         result.each do |row|
-            poligono = (row['st_astext']).gsub("MULTIPOLYGON(((","POLYGON((").gsub(")))","))")
-            conn.exec("update geo.remanescentes set geom = (st_geomfromtext(\'#{poligono}\',4326)) where gid = #{y};")
-#            puts "update geo.remanescentes set geom = (st_geomfromtext(\'#{poligono}\',4326)) where gid = #{y};"
-            puts "#{y}  -  278599"
-         end
-      end
-   end
-end
-
-
-
-## Inserir dados de REMANESCENTES de uma especie na tabela REMANESCENTE_ESPECIE
+## Inserir dados de REMANESCENTES na tabela SUBPOPULACAO_REMANESCENTE
 def insertRemanescentes(conn,id)
-gid = []
-   conn.exec("select distinct(gid) from geo.remanescentes where st_intersects(geom,(select st_union(geom) from geo.subpopulacoes where id = #{id})) and legenda = 'Mata';") do |result|
-      result.each do |row|   
-         gid.push(row['gid'])
-      end
-   end
-   for x in (0..gid.count-1)
-         conn.exec("insert into geo.remanescente_especie values (#{gid[x]}, #{id})")
-   end
+	gid_subpop = getSubpopById(conn,id)
+	for x in (0..gid_subpop.count-1)
+		puts "Subpopulacao #{x+1} de #{gid_subpop.count}"
+#		conn.exec("SELECT s.gid, s.id as especie, r.gid as remanescente from geo.subpopulacoes s inner join geo.remanescentes r on st_intersects(s.geom,r.geom) where s.gid = #{gid_subpop[x]} and r.legenda = 'Mata' group by s.gid, especie, remanescente;").each do |row|
+#		conn.exec("select distinct(gid) from geo.remanescentes where st_intersects(geom,(select st_union(geom) from geo.subpopulacoes where gid = #{gid_subpop[x]})) and legenda = 'Mata';").each do |row|
+		conn.exec("SELECT distinct(gid) as gid_rem from geo.remanescentes where st_intersects(geom,(select geom from geo.subpopulacoes where gid = #{gid_subpop[x]} and id = #{id})) and legenda = 'Mata';").each do |row|
+			if (row['gid_rem']) then
+				conn.exec("insert into geo.subpopulacao_remanescente(gid_subpop, gid_remanescente, id) values (#{gid_subpop[x]}, #{row['gid_rem']}, #{id});")
+			end
+		end
+	end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
