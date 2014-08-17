@@ -6,15 +6,17 @@ require 'yaml'
 require_relative 'functions'
 
 
-#conn.exec("")
 
 
 
 ## CREATE TAXON TABLES (SPECIES AND OCCURRENCES) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def createTaxonTables(conn)
 
-	## Table: geo.especies
+	conn.exec("DROP TABLE geo.ocorrencias;")
 	conn.exec("DROP TABLE geo.especies;")
+
+
+	## Table: geo.especies
 	conn.exec("CREATE TABLE geo.especies
 			(id integer NOT NULL,
 			  familia character varying(50) DEFAULT NULL::character varying,
@@ -30,7 +32,6 @@ def createTaxonTables(conn)
 
 
 	## Table: geo.ocorrencias
-	conn.exec("DROP TABLE geo.ocorrencias;")
 	conn.exec("CREATE TABLE geo.ocorrencias
 			(codigocncflora integer NOT NULL,
 			  id integer,
@@ -71,16 +72,6 @@ end
 ## CREATE ANALISYS TABLES    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (refazer apenas as consultas, colocando todos os drop table antes)
 def createAnalisysTables(conn)
 	
-	## Table: geo.aoo
-	conn.exec("DROP TABLE IF EXISTS geo.aoo;")
-	conn.exec("CREATE TABLE geo.aoo
-			(gid serial NOT NULL,
-			  id integer,
-			  geom geometry(Polygon,4326),
-			  CONSTRAINT aoo_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
-	conn.exec("ALTER TABLE geo.aoo OWNER TO cncflora;")
-
-
 
 	## Table: geo.eoo
 	conn.exec("DROP TABLE IF EXISTS geo.eoo;")
@@ -94,27 +85,44 @@ def createAnalisysTables(conn)
 
 
 
+	## Table: geo.aoo
+        conn.exec("DROP TABLE IF EXISTS geo.aoo;")
+        conn.exec("CREATE TABLE geo.aoo
+                        (gid serial NOT NULL,
+                          id integer,
+                          geom geometry(Polygon,4326),
+                          CONSTRAINT aoo_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+        conn.exec("ALTER TABLE geo.aoo OWNER TO cncflora;")
+
+
+
 	## Table: geo.subpopulacoes
+	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_remanescente;")
+	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_rodovia;")
+	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_mineracao;")
+	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_uc;")
+	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_terra_indigena;")
+
 	conn.exec("DROP TABLE IF EXISTS geo.subpopulacoes;")
 	conn.exec("CREATE TABLE geo.subpopulacoes(
 			  gid serial NOT NULL,
 			  id integer,
 			  geom geometry(Polygon,4326),
-			  area_total double precision,			  
-			  area_remanescente double precision,
-			  area_rodovia double precision,
-			  remanescentes_sob_rodovia double precision,
-			  area_minerada double precision,			  
-			  area_uc double precision,
-			  area_remanescente_uc double precision,
-			  area_terra_indigena double precision,
-			  area_remanescente_terra_indigena double precision,
-			  porcentagem_remanescente double precision,
-			  porcentagem_rodovia double precision,
-			  porcentagem_minerada double precision,
-			  porcentagem_remanescente_rodovia double precision,
-			  porcentagem_remanescente_uc double precision,
-			  porcentagem_remanescente_terra_indigena double precision,
+			  area_total double precision DEFAULT 0.0,			  
+			  area_remanescente double precision DEFAULT 0.0,
+			  area_rodovia double precision DEFAULT 0.0,
+			  remanescentes_sob_rodovia double precision DEFAULT 0.0,
+			  area_minerada double precision DEFAULT 0.0,			  
+			  area_uc double precision DEFAULT 0.0,
+			  area_remanescente_uc double precision DEFAULT 0.0,
+			  area_terra_indigena double precision DEFAULT 0.0,
+			  area_remanescente_terra_indigena double precision DEFAULT 0.0,
+			  porcentagem_remanescente double precision DEFAULT 0.0,
+			  porcentagem_rodovia double precision DEFAULT 0.0,
+			  porcentagem_minerada double precision DEFAULT 0.0,
+			  porcentagem_remanescente_rodovia double precision DEFAULT 0.0,
+			  porcentagem_remanescente_uc double precision DEFAULT 0.0,
+			  porcentagem_remanescente_terra_indigena double precision DEFAULT 0.0,
 			  CONSTRAINT subpopulacoes_pkey PRIMARY KEY (gid),
 			  CONSTRAINT subpopulacoes_id_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
 	conn.exec("ALTER TABLE geo.subpopulacoes OWNER TO cncflora;")
@@ -122,7 +130,6 @@ def createAnalisysTables(conn)
 
 
 	## Table: geo.subpopulacao_remanescente (relacionamento entre subpopulação, remanescentes e espécies. Antiga tabela remanescente_especie)
-	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_remanescente;")
 	conn.exec("CREATE TABLE geo.subpopulacao_remanescente(
 			  gid serial,
 			  gid_subpop integer,
@@ -137,7 +144,6 @@ def createAnalisysTables(conn)
 
 
 	## Table: geo.subpopulacao_rodovia
-	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_rodovia;")
 	conn.exec("CREATE TABLE geo.subpopulacao_rodovia(
 			  gid serial NOT NULL,
 			  gid_subpop integer,
@@ -150,7 +156,6 @@ def createAnalisysTables(conn)
 
 
 	## Table: geo.subpopulacao_mineracao
-	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_mineracao;")
 	conn.exec("CREATE TABLE geo.subpopulacao_mineracao(
 			  gid serial NOT NULL,
 			  gid_subpop integer,
@@ -163,7 +168,6 @@ def createAnalisysTables(conn)
 
 
 	## Table: geo.subpopulacao_uc
-	conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_uc;")
 	conn.exec("CREATE TABLE geo.subpopulacao_uc(
 			  gid serial NOT NULL,
 			  gid_subpop integer,
@@ -176,16 +180,15 @@ def createAnalisysTables(conn)
 
 
         ## Table: geo.subpopulacao_terra_indigena
-        conn.exec("DROP TABLE IF EXISTS geo.subpopulacao_terra_indigena;")
         conn.exec("CREATE TABLE geo.subpopulacao_terra_indigena(
                           gid serial NOT NULL,
                           gid_subpop integer,
                           gid_terra_indigena integer,
                           CONSTRAINT subpopulacao_terra_indigena_gid_pkey PRIMARY KEY (gid),
                           CONSTRAINT subpopulacao_terra_indigena_gid_subpop_fkey FOREIGN KEY (gid_subpop) REFERENCES geo.subpopulacoes (gid),
-                          CONSTRAINT subpopulacao_terra_indigena_gid_uc_fkey FOREIGN KEY (gid_terra_indigena) REFERENCES geo.ucs (gid));")
+                          CONSTRAINT subpopulacao_terra_indigena_gid_uc_fkey FOREIGN KEY (gid_terra_indigena) REFERENCES geo.terra_indigena (gid));")
         conn.exec("ALTER TABLE geo.subpopulacao_terra_indigena OWNER TO cncflora;")
-
+	puts "CREATE TABLE - OK"
 end
 
 
@@ -292,13 +295,11 @@ end
 
 
 
-## Inserir dados de REMANESCENTES na tabela SUBPOPULACAO_REMANESCENTE
+## Inserir dados de REMANESCENTES na tabela SUBPOPULACAO_REMANESCENTE   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def insertRemanescentes(conn,id)
 	gid_subpop = getSubpopById(conn,id)
 	for x in (0..gid_subpop.count-1)
 		puts "Subpopulacao #{x+1} de #{gid_subpop.count}"
-#		conn.exec("SELECT s.gid, s.id as especie, r.gid as remanescente from geo.subpopulacoes s inner join geo.remanescentes r on st_intersects(s.geom,r.geom) where s.gid = #{gid_subpop[x]} and r.legenda = 'Mata' group by s.gid, especie, remanescente;").each do |row|
-#		conn.exec("select distinct(gid) from geo.remanescentes where st_intersects(geom,(select st_union(geom) from geo.subpopulacoes where gid = #{gid_subpop[x]})) and legenda = 'Mata';").each do |row|
 		conn.exec("SELECT distinct(gid) as gid_rem from geo.remanescentes where st_intersects(geom,(select geom from geo.subpopulacoes where gid = #{gid_subpop[x]} and id = #{id})) and legenda = 'Mata';").each do |row|
 			if (row['gid_rem']) then
 				conn.exec("insert into geo.subpopulacao_remanescente(gid_subpop, gid_remanescente, id) values (#{gid_subpop[x]}, #{row['gid_rem']}, #{id});")
@@ -309,6 +310,169 @@ end
 
 
 
+## Insere dados de RODOVIAS de uma subpopulacao na tabela SUBPOPULACAO_RODOVIA    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertSubpopRod(conn,id)
+	gid_subpop = []
+	conn.exec("select gid from geo.subpopulacoes where id = #{id};").each do |row|
+		gid_subpop.push(row['gid'])
+	end
+	for x in (0..gid_subpop.count-1) 
+		puts "subpopulacao #{x+1} de #{gid_subpop.count}"
+		conn.exec("select gid from geo.rodovias where st_intersects(geom_buffer, (select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))").each do |row|
+			if row['gid'] then
+				conn.exec("insert into geo.subpopulacao_rodovia(gid_subpop, gid_rod) values (#{gid_subpop[x]}, #{row['gid']})")
+			end			
+		end
+	end
+end
+
+
+
+## Insere dados de MINERACAO de uma subpopulacao na tabela SUBPOPULACAO_MINERACAO    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertSubpopMin(conn,id)
+        gid_subpop = []
+        conn.exec("select gid from geo.subpopulacoes where id = #{id};").each do |row|
+                gid_subpop.push(row['gid'])
+        end
+        for x in (0..gid_subpop.count-1)
+                puts "subpopulacao #{x+1} de #{gid_subpop.count}"
+                conn.exec("select gid from geo.mineracao where st_intersects(geom, (select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))").each do |row|
+			if (row['gid']) then               
+				conn.exec("insert into geo.subpopulacao_mineracao(gid_subpop, gid_mineracao) values (#{gid_subpop[x]}, #{row['gid']})")
+			end
+                end
+        end
+end
+
+
+
+## Insere dados de UC de uma subpopulacao na tabela SUBPOPULACAO_UC    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertSubpopUc(conn,id)
+        gid_subpop = []
+        conn.exec("select gid from geo.subpopulacoes where id = #{id};").each do |row|
+                gid_subpop.push(row['gid'])
+        end
+        for x in (0..gid_subpop.count-1)
+                puts "subpopulacao #{x+1} de #{gid_subpop.count}"
+                conn.exec("select gid from geo.ucs where st_intersects(st_setsrid(geom,4326), (select st_setsrid(geom,4326) from geo.subpopulacoes where gid = #{gid_subpop[x]}))").each do |row|
+			if (row['gid']) then
+				conn.exec("insert into geo.subpopulacao_uc(gid_subpop, gid_uc) values (#{gid_subpop[x]}, #{row['gid']})")
+
+			end
+                end
+        end
+end
+
+
+
+## Insere dados de TERRA_INDIGENA de uma subpopulacao na tabela SUBPOPULACAO_TERRA_INDIGENA    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def insertSubpopTi(conn,id)
+        gid_subpop = []
+        conn.exec("select gid from geo.subpopulacoes where id = #{id};").each do |row|
+                gid_subpop.push(row['gid'])
+        end
+        for x in (0..gid_subpop.count-1)
+                puts "subpopulacao #{x+1} de #{gid_subpop.count}"
+                conn.exec("select gid from geo.terra_indigena where st_intersects(st_setsrid(geom,4326), (select st_setsrid(geom,4326) from geo.subpopulacoes where gid = #{gid_subpop[x]}))").each do |row|
+			if (row['gid']) then
+				conn.exec("insert into geo.subpopulacao_terra_indigena(gid_subpop, gid_terra_indigena) values (#{gid_subpop[x]}, #{row['gid']})")
+			end        
+                end
+        end
+end
+
+
+
+def calculateMetrics(conn,id)
+	gid_subpop = []
+	conn.exec("select gid from geo.subpopulacoes where id = #{id} and gid in (select gid_subpop from geo.subpopulacao_remanescente where id = #{id});").each do |row|
+		gid_subpop.push(row['gid'])
+	end
+
+
+
+	for x in (0..gid_subpop.count-1)
+		puts "subpopulacao #{x+1} de #{gid_subpop.count}"
+
+
+
+		## Calculo da área total da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("update geo.subpopulacoes set area_total = st_area(geom)*10000 where gid = #{gid_subpop[x]};")
+
+
+		
+		## Calculo da area_remanescente da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(geom, (select st_union(geom) from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]}))))*10000 as area_rem from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
+			if (row['area_rem']) then
+				conn.exec("update geo.subpopulacoes set area_remanescente = #{row['area_rem']} where gid = #{gid_subpop[x]}")
+				puts "area remanescente: #{row['area_rem']}"
+			end
+		end
+
+
+
+		## Calculo da area_rodovia da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(geom, (select st_union(geom_buffer) from geo.rodovias where gid in (select gid_rod from geo.subpopulacao_rodovia where gid_subpop = #{gid_subpop[x]}))))*10000 as area_rod from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
+			if (row['area_rod']) then
+				conn.exec("update geo.subpopulacoes set area_rodovia = #{row['area_rod']} where gid = #{gid_subpop[x]}")
+				puts "area rodovia: #{row['area_rod']}"
+			end
+		end
+
+
+
+		## Calculo da remanescentes_sob_rodovia da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(st_union(geom), (select st_union(geom_buffer) from geo.rodovias where gid in (select gid_rod from geo.subpopulacao_rodovia where gid_subpop = #{gid_subpop[x]}))))*10000 as rem_rod from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]});").each do |row|
+			if (row['rem_rod']) then
+				conn.exec("update geo.subpopulacoes set remanescentes_sob_rodovia = #{row['rem_rod']} where gid = #{gid_subpop[x]}")
+				puts "remanescente sob rodovia: #{row['rem_rod']}"
+			end
+		end
+
+
+
+		## Calculo da area_uc da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(geom, (select st_setsrid(st_union(geom),4326) from geo.ucs where gid in (select gid_uc from geo.subpopulacao_uc where gid_subpop = #{gid_subpop[x]}))))*10000 as area_uc from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
+			if (row['area_uc']) then
+				conn.exec("update geo.subpopulacoes set area_uc = #{row['area_uc']} where gid = #{gid_subpop[x]}")
+				puts "area rodovia: #{row['area_uc']}"
+			end
+		end
+
+
+
+		## Calculo da area_remanescente_uc da subpopulacao (area remanescente dentro de UC)   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(st_setsrid(st_union(geom),4326), (select st_setsrid(st_union(geom),4326) from geo.ucs where gid in (select gid_uc from geo.subpopulacao_uc where gid_subpop = #{gid_subpop[x]}))))*10000 as rem_uc from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]});").each do |row|
+			if (row['rem_uc']) then
+				conn.exec("update geo.subpopulacoes set area_remanescente_uc = #{row['rem_uc']} where gid = #{gid_subpop[x]}")
+				puts "remanescente dentro de UC: #{row['rem_uc']}"
+			end
+		end
+
+
+
+		## Calculo da area_terra_indigena da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(geom, (select st_setsrid(st_union(geom),4326) from geo.terra_indigena where gid in (select gid_terra_indigena from geo.subpopulacao_terra_indigena where gid_subpop = #{gid_subpop[x]}))))*10000 as area_ti from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
+			if (row['area_ti']) then
+				conn.exec("update geo.subpopulacoes set area_terra_indigena = #{row['area_ti']} where gid = #{gid_subpop[x]}")
+				puts "area terra indigena: #{row['area_ti']}"
+			end
+		end
+
+
+
+		## Calculo da area_remanescente_terra_indigena da subpopulacao (area remanescente dentro de terra indigena)   !!!!!!!!!!!
+		conn.exec("select st_area(st_intersection(st_union(geom), (select st_setsrid(st_union(geom),4326) from geo.terra_indigena where gid in (select gid_terra_indigena from geo.subpopulacao_terra_indigena where gid_subpop = #{gid_subpop[x]}))))*10000 as rem_ti from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]});").each do |row|
+			if (row['rem_ti']) then
+				conn.exec("update geo.subpopulacoes set area_remanescente_terra_indigena = #{row['rem_ti']} where gid = #{gid_subpop[x]}")
+				puts "remanescente dentro de terra indigena: #{row['rem_ti']}"
+			end
+		end
+
+
+
+
+	end
 
 
 
@@ -320,73 +484,73 @@ end
 
 
 
+	conn.exec("update geo.subpopulacoes set porcentagem_remanescente = ((area_remanescente / area_total) * 100) where id = #{id};")
+	conn.exec("update geo.subpopulacoes set porcentagem_rodovia = ((area_rodovia / area_total) * 100) where id = #{id};")
+	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_rodovia = ((remanescentes_sob_rodovia / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
+	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_uc = ((area_remanescente_uc / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
+	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_terra_indigena = ((area_remanescente_terra_indigena / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
 
 
 
 
-## Inserir informacoes da Flora do Brasil na tabela de especies
-def insertFB(conn)
-   conn.exec("select id, genus, specificEpithet, infraspecificEpithet from geo.fb_taxon where ((taxonomicStatus = 'NOME_ACEITO') and (genus is not null) and (specificEpithet is not null));") do |result|
-      result.each do |row|
-         id_fb = (row['id'])
-         genus = (row['genus'])
-	 specificepithet = (row['specificepithet'])
-         infraspecificepithet = (row['infraspecificepithet'])
-        
-         conn.exec("update geo.especies set id_fb = #{id_fb} where genero = '#{genus}' and especie = '#{specificepithet}' and infranome = '#{infraspecificepithet}';")
-         puts "#{id_fb} = #{genus} #{specificepithet} #{infraspecificepithet}"
-      end
-   end
 
-   conn.exec("select id, lifeform from geo.fb_speciesprofile where lifeform is not null;") do |result|
-      result.each do |row|
-         id_fb = (row['id'])
-         lifeform_fb = (row['lifeform'])
-         
-         conn.exec("update geo.especies set lifeform_fb = '#{lifeform_fb}' where id_fb = '#{id_fb}';")
-         puts "#{id_fb} = #{lifeform_fb}"
-      end
-   end
 end
 
 
 
 
-## Criar poligono de AOO no postgis
-def createAOOOld(conn, id)
-   conn.exec("select st_astext(b.geom) from geo.grid b inner join geo.ocorrencias a on st_intersects(b.geom, a.geom) where a.id = #{id} group by a.id, b.geom;") do |result|
-      result.each do |row|
-         poligono = (row['st_astext'])      
-         conn.exec("insert into geo.aoo(id,geom) values (#{id}, (st_geomfromtext(\'#{poligono}\',4326)));")      
-      end
-   end
-end
 
 
 
 
-## Cria e insere dados de RODOVIAS de uma especie na tabela SUBPOPULACAO_RODOVIA
-def createSubpopulacaoRodovia(conn)
-subpop = []
-   conn.exec("select gid from geo.subpopulacoes;") do |result|
-      result.each do |row|
-         subpop.push(row['gid'])
-      end
-   end
-   for x in (0..subpop.count-1) 
-      puts "subpopulacao #{x+1} de #{subpop.count}"
-      rod = []
-      conn.exec("select gid from geo.rodovias where st_intersects(geom_buffer, (select geom from geo.subpopulacoes where gid = #{subpop[x]}))") do |result|
-         result.each do |row|
-            rod.push(row['gid'])
-         end
-      end
-      for y in (0..rod.count-1)
-         puts "   - rodovia #{y+1} de #{rod.count}"
-         conn.exec("insert into geo.subpopulacao_rodovia(gid_subpop, gid_rod) values (#{subpop[x]}, #{rod[y]})") 
-      end 
-   end
-end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Calcula as metricas de subpopulacao (vegetacao/efeito de rodovias)
 def calculoMetricasSubpopulacao(conn)
