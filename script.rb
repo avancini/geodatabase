@@ -22,8 +22,10 @@ createAnalisysTables(conn)
 ## Listar as espécies (id) e executa todos os cálculos marcando o tempo de cada operação
 especies = getSpeciesId(conn)
 for x in (0..especies.count-1)
-	puts "Especie - #{especies[x]} - #{x+1} de #{especies.count}"
+	puts "     ----------     Especie - #{especies[x]} - #{x+1} de #{especies.count}     ----------"
 	
+	insertIdTempos(conn,especies[x])
+
 	insertEoo(conn, especies[x])
 	insertAoo(conn, especies[x])
 
