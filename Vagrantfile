@@ -14,8 +14,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.provision :shell, :path => "bootstrap.sh"
 
     config.vm.provider "virtualbox" do |v|
-       v.memory = 4096
-       v.cpus = 1
+       v.memory = 8192
+       v.cpus = 4
     end
 
   # Disable automatic box update checking. If you disable this, then

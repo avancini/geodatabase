@@ -464,7 +464,9 @@ end
 
 def calculateMetrics(conn,id)
 	gid_subpop = []
-	conn.exec("select gid from geo.subpopulacoes where id = #{id} and gid in (select gid_subpop from geo.subpopulacao_remanescente where id = #{id});").each do |row|
+	#conn.exec("select gid from geo.subpopulacoes where id = #{id} and gid in (select gid_subpop from geo.subpopulacao_remanescente where id = #{id});").each do |row|
+	conn.exec("select gid from geo.subpopulacoes where id = #{id};").each do |row|
+
 		gid_subpop.push(row['gid'])
 	end
 
@@ -472,9 +474,7 @@ def calculateMetrics(conn,id)
 
 	for x in (0..gid_subpop.count-1)
 		puts "subpopulacao #{x+1} de #{gid_subpop.count}"
-
-
-
+		puts "gid = #{gid_subpop[x]}"
 		## Calculo da área total da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("update geo.subpopulacoes set area_total = st_area(geom)*10000 where gid = #{gid_subpop[x]};")
@@ -486,7 +486,7 @@ def calculateMetrics(conn,id)
 		## Calculo da area_remanescente da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_intersection(geom, (select st_union(geom) from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]}))))*10000 as area_rem from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
-			if (row['area_rem']) then
+			if (row['area_rem'].to_f  > 0) then
 				conn.exec("update geo.subpopulacoes set area_remanescente = #{row['area_rem']} where gid = #{gid_subpop[x]}")
 				puts "area remanescente: #{row['area_rem']}"
 			end
@@ -499,7 +499,7 @@ def calculateMetrics(conn,id)
 		# Calculo da area_minerada da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
                 conn.exec("select st_area(st_intersection(geom, (select st_union(geom) from geo.mineracao where gid in (select gid_mineracao from geo.subpopulacao_mineracao where gid_subpop = #{gid_subpop[x]}))))*10000 as area_min from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
-                        if (row['area_min']) then
+                        if (row['area_min'].to_f  > 0) then
                                 conn.exec("update geo.subpopulacoes set area_minerada = #{row['area_min']} where gid = #{gid_subpop[x]}")
                                 puts "area minerada: #{row['area_min']}"
                         end
@@ -512,7 +512,7 @@ def calculateMetrics(conn,id)
 		## Calculo da area_rodovia da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_intersection(geom, (select st_union(geom_buffer) from geo.rodovias where gid in (select gid_rod from geo.subpopulacao_rodovia where gid_subpop = #{gid_subpop[x]}))))*10000 as area_rod from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
-			if (row['area_rod']) then
+			if (row['area_rod'].to_f  > 0) then
 				conn.exec("update geo.subpopulacoes set area_rodovia = #{row['area_rod']} where gid = #{gid_subpop[x]}")
 				puts "area rodovia: #{row['area_rod']}"
 			end
@@ -525,7 +525,7 @@ def calculateMetrics(conn,id)
 		## Calculo da remanescentes_sob_rodovia da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_intersection(st_union(geom_buffer), (select st_union(st_intersection(geom,(select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))) from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]}))))*10000 from geo.rodovias where gid in (select gid_rod from geo.subpopulacao_rodovia where gid_subpop = #{gid_subpop[x]});").each do |row|
-			if (row['rem_rod']) then
+			if (row['rem_rod'].to_f  > 0) then
 				conn.exec("update geo.subpopulacoes set remanescentes_sob_rodovia = #{row['rem_rod']} where gid = #{gid_subpop[x]}")
 				puts "remanescente sob rodovia: #{row['rem_rod']}"
 			end
@@ -538,7 +538,7 @@ def calculateMetrics(conn,id)
 		## Calculo da area_uc da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_intersection(geom, (select st_setsrid(st_union(geom),4326) from geo.ucs where gid in (select gid_uc from geo.subpopulacao_uc where gid_subpop = #{gid_subpop[x]}))))*10000 as area_uc from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
-			if (row['area_uc']) then
+			if (row['area_uc'].to_f  > 0) then
 				conn.exec("update geo.subpopulacoes set area_uc = #{row['area_uc']} where gid = #{gid_subpop[x]}")
 				puts "area UC: #{row['area_uc']}"
 			end
@@ -551,7 +551,7 @@ def calculateMetrics(conn,id)
 		## Calculo da area_remanescente_uc da subpopulacao (area remanescente dentro de UC)   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_union(st_intersection(st_setsrid(geom, 4326),(select st_union(st_intersection(geom, (select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))) from geo.remanescentes where gid in (select gid_remanescente from geo.subpopulacao_remanescente where gid_subpop = #{gid_subpop[x]})))))*10000 from geo.ucs where gid in (select gid_uc from geo.subpopulacao_uc where gid_subpop = #{gid_subpop[x]});").each do |row|
-			if (row['rem_uc']) then
+			if (row['rem_uc'].to_f  > 0) then
 				conn.exec("update geo.subpopulacoes set area_remanescente_uc = #{row['rem_uc']} where gid = #{gid_subpop[x]}")
 				puts "remanescente dentro de UC: #{row['rem_uc']}"
 			end
