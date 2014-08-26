@@ -178,7 +178,7 @@ def createAnalisysTables(conn)
 	conn.exec("ALTER TABLE geo.subpopulacao_uc OWNER TO cncflora;")
 
 
-
+=begin
         ## Table: geo.subpopulacao_terra_indigena
         conn.exec("CREATE TABLE geo.subpopulacao_terra_indigena(
                           gid serial NOT NULL,
@@ -189,12 +189,31 @@ def createAnalisysTables(conn)
                           CONSTRAINT subpopulacao_terra_indigena_gid_uc_fkey FOREIGN KEY (gid_terra_indigena) REFERENCES geo.terra_indigena (gid));")
         conn.exec("ALTER TABLE geo.subpopulacao_terra_indigena OWNER TO cncflora;")
 	puts "CREATE TABLE - OK"
-
+=end
 	
 
 	## Tabela: geo.tempos
 	conn.exec("DROP TABLE IF EXISTS geo.tempos;")
-        conn.exec("CREATE TABLE geo.tempos(id integer NOT NULL,
+	conn.exec("CREATE TABLE geo.tempos(id integer NOT NULL,
+                          t_eoo double precision DEFAULT 0.0,
+                          t_aoo double precision DEFAULT 0.0,
+                          t_subpop double precision DEFAULT 0.0,
+                          t_subpop_rem double precision DEFAULT 0.0,
+                          t_subpop_rod double precision DEFAULT 0.0,
+                          t_subpop_min double precision DEFAULT 0.0,
+                          t_subpop_uc double precision DEFAULT 0.0,
+                          t_area_total_subpop double precision DEFAULT 0.0,
+                          t_area_rem double precision DEFAULT 0.0,
+                          t_area_min double precision DEFAULT 0.0,
+                          t_area_rod double precision DEFAULT 0.0,
+                          t_area_rem_rod double precision DEFAULT 0.0,
+                          t_area_uc double precision DEFAULT 0.0,
+                          t_area_rem_uc double precision DEFAULT 0.0,
+                          t_total double precision DEFAULT 0.0,
+                          CONSTRAINT eoo_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
+        conn.exec("ALTER TABLE geo.tempos OWNER TO cncflora;")
+=begin
+	conn.exec("CREATE TABLE geo.tempos(id integer NOT NULL,
                           t_eoo double precision DEFAULT 0.0,
                           t_aoo double precision DEFAULT 0.0,
 			  t_subpop double precision DEFAULT 0.0,
@@ -215,7 +234,7 @@ def createAnalisysTables(conn)
 			  t_total double precision DEFAULT 0.0,
                           CONSTRAINT eoo_fkey FOREIGN KEY (id) REFERENCES geo.especies (id));")
         conn.exec("ALTER TABLE geo.tempos OWNER TO cncflora;")
-
+=end
 
 
 end
@@ -421,7 +440,7 @@ def insertSubpopUc(conn,id)
 end
 
 
-
+=begin
 ## Insere dados de TERRA_INDIGENA de uma subpopulacao na tabela SUBPOPULACAO_TERRA_INDIGENA    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def insertSubpopTi(conn,id)
 	t_init = Time.new
@@ -440,7 +459,7 @@ def insertSubpopTi(conn,id)
 	t = (Time.new - t_init)
         conn.exec("update geo.tempos set t_subpop_ti = #{t} where id = #{id}")
 end
-
+=end
 
 
 def calculateMetrics(conn,id)
@@ -541,7 +560,7 @@ def calculateMetrics(conn,id)
                 conn.exec("update geo.tempos set t_area_rem_uc = #{t} where id = #{id}")
 
 
-
+=begin
 		## Calculo da area_terra_indigena da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
 		conn.exec("select st_area(st_intersection(geom, (select st_setsrid(st_union(geom),4326) from geo.terra_indigena where gid in (select gid_terra_indigena from geo.subpopulacao_terra_indigena where gid_subpop = #{gid_subpop[x]}))))*10000 as area_ti from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
@@ -565,7 +584,7 @@ def calculateMetrics(conn,id)
 		end
 		t = (Time.new - t_init)
                 conn.exec("update geo.tempos set t_area_rem_ti = #{t} where id = #{id}")
-
+=end
 
 
 
@@ -581,9 +600,10 @@ def calculateMetrics(conn,id)
 	conn.exec("update geo.subpopulacoes set porcentagem_rodovia = ((area_rodovia / area_total) * 100) where id = #{id};")
 	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_rodovia = ((remanescentes_sob_rodovia / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
 	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_uc = ((area_remanescente_uc / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
-	conn.exec("update geo.subpopulacoes set porcentagem_remanescente_terra_indigena = ((area_remanescente_terra_indigena / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
+	#conn.exec("update geo.subpopulacoes set porcentagem_remanescente_terra_indigena = ((area_remanescente_terra_indigena / area_remanescente) * 100) where id = #{id} and area_remanescente <> 0;")
 	conn.exec("update geo.subpopulacoes set porcentagem_minerada = ((area_minerada / area_total) * 100) where id = #{id};")
-	conn.exec("update geo.tempos set t_total = ((t_eoo + t_aoo + t_subpop + t_subpop_rem + t_subpop_rod + t_subpop_min + t_subpop_uc + t_subpop_ti + t_area_total_subpop + t_area_rem + t_area_min + t_area_rod + t_area_rem_rod + t_area_uc + t_area_rem_uc + t_area_ti + t_area_rem_ti) / 60) where id = #{id};")
+	#conn.exec("update geo.tempos set t_total = ((t_eoo + t_aoo + t_subpop + t_subpop_rem + t_subpop_rod + t_subpop_min + t_subpop_uc + t_subpop_ti + t_area_total_subpop + t_area_rem + t_area_min + t_area_rod + t_area_rem_rod + t_area_uc + t_area_rem_uc + t_area_ti + t_area_rem_ti) / 60) where id = #{id};")
+	conn.exec("update geo.tempos set t_total = ((t_eoo + t_aoo + t_subpop + t_subpop_rem + t_subpop_rod + t_subpop_min + t_subpop_uc + t_area_total_subpop + t_area_rem + t_area_min + t_area_rod + t_area_rem_rod + t_area_uc + t_area_rem_uc) / 60) where id = #{id};")
 
 
 

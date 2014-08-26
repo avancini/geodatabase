@@ -35,7 +35,7 @@ for x in (0..especies.count-1)
 	insertSubpopRod(conn,especies[x])
 	insertSubpopMin(conn,especies[x])
 	insertSubpopUc(conn,especies[x])
-	insertSubpopTi(conn,especies[x])
+	#insertSubpopTi(conn,especies[x])
 
 	calculateMetrics(conn,especies[x])
 end
