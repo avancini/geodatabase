@@ -3,3 +3,11 @@ port: "5432"
 database: "mbti"
 user: "cncflora"
 password: "cncflora"
+
+
+## Conexao PostGIS cncflora
+ip2: "146.134.16.22"
+port2: "5432"
+database2: "cncflora"
+user2: "cncflora"
+password2: "jWY8AAYfUz7rRwrq"

@@ -15,7 +15,7 @@ conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml
 ## Funcao para corrigir os remanescentes
 #remanescentes = corrigeRemanescentes(conn)
 
-## Insere os gis de subpopulacoes e rodovias associadas
+## Insere os gids de subpopulacoes e rodovias associadas
 #createSubpopulacaoRodovia(conn)
 
 ## Calcular as metricas dentro da subpopulacao
@@ -41,15 +41,13 @@ end
 #insereRelSubpopUcs(conn)
 
 ## calcula a area de remanescentes protegidos por ucs
-#=begin
-subpop = getSubpopGid(conn)
-for x in (0..subpop.count-1)
-   puts "#{x+1} de #{subpop.count}"
-   calculoAreaRemanescenteUcs(conn, subpop[x])
-end
-#=end
-
-
+=begin
+	subpop = getSubpopGid(conn)
+	for x in (0..subpop.count-1)
+	   puts "#{x+1} de #{subpop.count}"
+	   calculoAreaRemanescenteUcs(conn, subpop[x])
+	end
+=end
 
 
 =begin
@@ -89,7 +87,7 @@ for x in (0..y)
    ## Inserir remanescentes na tabela remanescente_especie
 #   insertRemanescentes(conn,especies[x])
 end
-
 =end
+
 
 
