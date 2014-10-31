@@ -18,12 +18,15 @@ conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml
 ## Função que cria as tebelas para armazenar os resultados
 #createAnalisysTables(conn)
 
+
+=begin
+script para corrigir geometrias de mineracao
 conn.exec("select gid from geo.mineracao order by gid").each do |row|
 	conn.exec("update geo.mineracao set geom = (select st_union(st_makevalid(geom)) from geo.mineracao where gid = #{row['gid']});")
 	puts "#{row['gid']}"
 end 
 exit
-
+=end
 
 ## Listar as espécies (id) e executa todos os cálculos marcando o tempo de cada operação
 especies = getSpeciesId(conn)
