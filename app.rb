@@ -5,7 +5,7 @@ require 'sinatra/reloader'
 require 'json'
 require 'pg'
 require 'yaml'
-require_relative 'functions'
+#require_relative 'functions'
 
 ## Conexão
 yml= YAML.load_file("config.yml")
@@ -28,7 +28,7 @@ get '/pontos' do
    num=params[:numero]
    pontos = []
 
-   conn.exec("select ST_AsGeoJSON(geom) as pontos from geo.ocorrencias where id = #{num};") do |result|
+   conn.exec("select ST_AsGeoJSON(st_transform(geom, 4326)) as pontos from geo.ocorrencias where id = #{num};") do |result|
       result.each do |row|
       pontos.push(JSON.parse(row['pontos']))
       end
@@ -47,7 +47,7 @@ get '/eoo' do
    num=params[:numero]
    eoo = []
 
-   conn2.exec(" select st_asgeojson(geom) as poligono from geo.eoo where id = #{num};") do |result2|
+   conn2.exec(" select st_asgeojson(st_transform(geom, 4326)) as poligono from geo.eoo where id = #{num};") do |result2|
       result2.each do |row2|
       eoo.push(JSON.parse(row2['poligono']))
       end
@@ -58,7 +58,7 @@ get '/eoo' do
    eoo.to_json
 end
 
-
+=begin
 
 ## Busca SUBPOPULACOES de uma especie
 get '/subpopulacoes' do
@@ -135,4 +135,4 @@ conn6.exec("select ST_AsGeoJSON(geom) as linha from geo.rodovias where st_inters
 end
 
 
-
+=end
