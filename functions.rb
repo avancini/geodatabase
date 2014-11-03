@@ -241,8 +241,10 @@ end
 ## Lista de espécies (id)    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def getSpeciesId(conn)
 	especies = []
-###	conn.exec("select id from geo.especies where id = 112398 order by id;").each do |row|
-	conn.exec("select id from geo.especies where especies.id not in (select id from geo.tempos) and especies.id not in (select id from geo.tempos where t_total > 0) order by RANDOM() limit 100;").each do |row|
+###	conn.exec("select id from geo.especies where id in (10322, 10900, 11994, 91821) order by id;").each do |row|
+
+	conn.exec("select id from geo.especies where id in (10322, 10900, 11994, 91821, 1740, 4218, 4642, 5271, 5676, 5709, 5720, 5737, 5766, 5896, 5963, 5967, 6125, 6306, 6418, 6433, 6469, 6536, 6564, 6577, 6925, 7712, 7831, 7906, 7944, 8446, 8830, 8877, 8880, 8882, 8892, 8924, 8954, 8975, 9347, 9417, 9878, 10435, 10806, 10818, 10976, 11323, 11363, 11364, 12127, 12129, 12705, 12747, 13306, 14067, 14272, 14776, 15044, 15291, 15298, 25171, 34128, 34583, 35681, 39839, 39851, 48806, 79073, 79282, 90786, 91630, 91918, 91983, 92094, 100934, 100936, 100937, 101536, 102441, 103518, 106114, 110266, 110326, 111256, 114121, 114495)  order by id;").each do |row|
+###	conn.exec("select id from geo.especies where especies.id not in (select id from geo.tempos) and especies.id not in (select id from geo.tempos where t_total > 0) order by RANDOM() limit 100;").each do |row|
 ###	conn.exec("select id from geo.especies where id in (select distinct(id) from geo.subpopulacoes where area_minerada = 0);").each do |row|
 		especies.push(row['id'])
 	end
@@ -284,7 +286,7 @@ def insertAoo(conn, id)
 	poligono = ""
 	conn.exec("select st_astext(b.geom) from geo.grid b inner join geo.ocorrencias a on st_intersects(b.geom, a.geom) where a.id = #{id} group by a.id, b.geom;").each do |row|
         	poligono = (row['st_astext'])
-		conn.exec("insert into geo.aoo(id,geom) values (#{id}, (st_geomfromtext(\'#{poligono}\',4326)));")
+		conn.exec("insert into geo.aoo(id,geom) values (#{id}, (st_geomfromtext(\'#{poligono}\',102033)));")
 	end
 	t = (Time.new - t_init)
 	conn.exec("update geo.tempos set t_aoo = #{t} where id = #{id}")
@@ -505,8 +507,8 @@ def calculateMetrics(conn,id)
 
 		# Calculo da area_minerada da subpopulacao   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		t_init = Time.new
-# opcao alternativa		conn.exec("select st_area(st_intersection(geom, (select st_union(geom) from geo.mineracao where gid in (select gid_mineracao from geo.subpopulacao_mineracao where gid_subpop = #{gid_subpop[x]}))))/1000000 as area_min from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
-		conn.exec("select st_area(st_union(st_intersection(geom, (select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))))/1000000 as area_min from geo.mineracao where gid in (select gid_mineracao from geo.subpopulacao_mineracao where gid_subpop = #{gid_subpop[x]});").each do |row|
+		conn.exec("select st_area(st_intersection(geom, (select st_union(geom) from geo.mineracao where gid in (select gid_mineracao from geo.subpopulacao_mineracao where gid_subpop = #{gid_subpop[x]}))))/1000000 as area_min from geo.subpopulacoes where gid = #{gid_subpop[x]};").each do |row|
+###		conn.exec("select st_area(st_union(st_intersection(geom, (select geom from geo.subpopulacoes where gid = #{gid_subpop[x]}))))/1000000 as area_min from geo.mineracao where gid in (select gid_mineracao from geo.subpopulacao_mineracao where gid_subpop = #{gid_subpop[x]});").each do |row|
                         if (row['area_min'].to_f  > 0) then
                                 conn.exec("update geo.subpopulacoes set area_minerada = #{row['area_min']} where gid = #{gid_subpop[x]}")
                                 puts "area minerada: #{row['area_min']}"

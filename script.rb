@@ -16,7 +16,7 @@ conn = PG::Connection.new(yml["ip"], yml["port"], nil, nil, yml["database"], yml
 #createTaxonTables(conn)
 
 ## Função que cria as tebelas para armazenar os resultados
-#createAnalisysTables(conn)
+createAnalisysTables(conn)
 
 
 =begin
