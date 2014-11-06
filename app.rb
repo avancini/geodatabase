@@ -58,7 +58,7 @@ get '/eoo' do
    eoo.to_json
 end
 
-=begin
+
 
 ## Busca SUBPOPULACOES de uma especie
 get '/subpopulacoes' do
@@ -66,7 +66,25 @@ get '/subpopulacoes' do
    num=params[:numero]
    subpopulacoes = []
 
-   conn3.exec("select ST_AsGeoJSON(geom) as poligono from geo.subpopulacoes where id = #{num};") do |result3|
+   conn3.exec("select ST_AsGeoJSON(st_transform(geom, 4326)) as poligono from geo.subpopulacoes where id = #{num};") do |result3|
+      result3.each do |row3|
+      subpopulacoes.push(JSON.parse(row3['poligono']))
+      end
+   end
+
+   #puts "SUBPOPULACOES GeoJSON ====>  #{subpopulacoes}"
+   content_type :json
+   subpopulacoes.to_json
+end
+
+
+## Busca UCs de uma especie
+get '/ucs' do
+
+   num=params[:numero]
+   subpopulacoes = []
+
+   conn3.exec("select ST_AsGeoJSON(st_transform(geom, 4326)) as poligono from geo.ucs where gid in (select gid_uc from geo.subpopulacao_uc where gid_subpop in (select gid from geo.subpopulacoes where id =  #{num}));") do |result3|
       result3.each do |row3|
       subpopulacoes.push(JSON.parse(row3['poligono']))
       end
@@ -79,6 +97,8 @@ end
 
 
 
+
+=begin
 ## Busca AOO de uma especie
 get '/aoo' do
 
